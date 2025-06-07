@@ -3,6 +3,7 @@
   import type { Character } from './characterStore';
   import AttackEditor from './AttackEditor.svelte';
 
+
   let newChar: Omit<Character, 'id'> = {
     name: '',
     team: 'good',
@@ -124,18 +125,9 @@
       <div class="char-name">
         <strong>{char.name}{char.isPlayer ? ' (Player)' : ''}</strong>
         {#if char.team === 'good'}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
+          <i class="fas fa-shield-alt"></i>
         {:else}
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2C6.5 2 2 6.5 2 12c0 5.5 4.5 10 10 10s10-4.5 10-10S17.5 2 12 2z"/>
-            <path d="M16 9v1"/>
-            <path d="M8 9v1"/>
-            <path d="M12 17c-1.5 0-3.5-1-4-3h8c-.5 2-2.5 3-4 3z"/>
-            <path d="M16 12c0 1.5-.5 3-2 4"/>
-            <path d="M8 12c0 1.5.5 3 2 4"/>
-          </svg>
+          <i class="fas fa-skull"></i>
         {/if}
       </div><br />
       AC: {char.ac}<br />
