@@ -1,8 +1,9 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { settings } from './settingsStore';
   import type { Settings } from './settingsStore';
 
-  let currentSettings: Settings;
+  let currentSettings: Settings = $settings;
 
   function updateSettings(newSettings: Partial<Settings>) {
     settings.update(s => ({ ...s, ...newSettings }));
@@ -27,7 +28,6 @@
   .settings-container {
     padding: 1rem;
     border-radius: 8px;
-    background: white;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 

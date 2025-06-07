@@ -85,7 +85,16 @@
       {/each}
     {/if}
   </div>
- 
+  
+  {#if attackDialogOpen && currentAttack}
+    <AttackDialog
+      isOpen={attackDialogOpen}
+      onClose={() => attackDialogOpen = false}
+      attackerId={selectedCharacter}
+      attack={currentAttack}
+      onAttackComplete={handleAttackComplete}
+    />
+  {/if}
 </div>
 
 <style>

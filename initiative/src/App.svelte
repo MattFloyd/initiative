@@ -2,8 +2,8 @@
   import { characters } from './characters/characterStore';
   import CharacterEditor from './characters/CharacterEditor.svelte';
   import Encounter from './encounters/Encounter.svelte';
-  import { settings } from './stores/settingsStore';
-  import Settings from './components/Settings.svelte';
+  import { settings } from './settings/settingsStore';
+  import Settings from './settings/Settings.svelte';
   import { encounter } from './encounters/encounterStore';
   let currentView = 'initiative';
 </script>
