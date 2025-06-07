@@ -22,7 +22,6 @@
 </script>
 
 <div class="attacks-section">
-  <h3>Attacks</h3>
   <div class="attacks-grid">
     {#each attacks as attack, i}
       <div class="attack-item">
@@ -53,34 +52,38 @@
 
 <style>
   .attacks-section {
-    margin-top: 1rem;
-    padding: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
     width: 100%;
-    grid-column: span 2;
+    box-sizing: border-box;
   }
 
   .attacks-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .attack-item {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr auto;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
     gap: 0.5rem;
     padding: 0.5rem;
-    background: #f8f8f8;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .attack-item input {
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .attack-item button {
     padding: 0.25rem 0.5rem;
+    white-space: nowrap;
   }
 </style>

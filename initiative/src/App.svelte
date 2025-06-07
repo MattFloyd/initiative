@@ -6,6 +6,19 @@
   import Settings from './settings/Settings.svelte';
   import { encounter } from './encounters/encounterStore';
   let currentView = 'initiative';
+  let userNavigated = false;
+
+  // Automatically navigate to character creation if no characters exist
+  // Only do this if user hasn't manually navigated
+  $: if ($characters.length === 0 && !userNavigated) {
+    currentView = 'edit';
+  }
+
+  // Function to handle navigation that prevents automatic navigation
+  function navigateTo(view: string) {
+    currentView = view;
+    userNavigated = true;
+  }
 </script>
 
 <style>
@@ -77,9 +90,9 @@
 <header>
   <h1>Roll Call</h1>
   <nav>
-    <button class:active={currentView === 'edit'} on:click={() => currentView = 'edit'}>Edit Characters</button>
-    <button class:active={currentView === 'initiative'} on:click={() => currentView = 'initiative'}>Initiative</button>
-    <button class:active={currentView === 'settings'} on:click={() => currentView = 'settings'}>Settings</button>
+    <button class:active={currentView === 'edit'} on:click={() => navigateTo('edit')}>Edit Characters</button>
+    <button class:active={currentView === 'initiative'} on:click={() => navigateTo('initiative')}>Initiative</button>
+    <button class:active={currentView === 'settings'} on:click={() => navigateTo('settings')}>Settings</button>
   </nav>
 </header>
 

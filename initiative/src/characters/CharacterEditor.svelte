@@ -74,14 +74,16 @@
       disabled={newChar.isPlayer}
     />
   </div>
-  <div class="form-group">
-    {#if !newChar.isPlayer}
-      <AttackEditor 
-        attacks={newChar.attacks}
-        onAttackChange={(newAttacks) => newChar = { ...newChar, attacks: newAttacks }}
-      />
-    {/if}
-  </div>
+  {#if !newChar.isPlayer}
+    <div class="form-group">
+      <div class="attacks-section">
+        <AttackEditor 
+          attacks={newChar.attacks}
+          onAttackChange={(newAttacks) => newChar = { ...newChar, attacks: newAttacks }}
+        />
+      </div>
+    </div>
+  {/if}
   <button on:click={addCharacter} disabled={isAddDisabled}>Add Character</button>
 </div>
 
@@ -149,9 +151,9 @@
 <style>
   .char-form, .char-card {
     border: 1px solid #ccc;
-    padding: 1rem;
     margin-bottom: 1rem;
     border-radius: 6px;
+    background: transparent;
   }
 
   .char-form {
@@ -159,6 +161,9 @@
     grid-template-columns: auto 1fr;
     gap: 0.5rem;
     align-items: center;
+    padding: 1rem;
+    box-sizing: border-box;
+    width: 100%;
   }
 
   .form-group {
@@ -173,13 +178,26 @@
   .char-form button {
     grid-column: span 2;
     justify-self: center;
-
+    margin-top: 0.5rem;
   }
+
+  .attacks-section {
+    grid-column: 1 / -1;
+    margin: 1rem 0 0 0;
+    padding: 1rem 0 0 0;
+    border-top: 1px solid #eee;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+
 
   .char-card {
     display: flex;
     flex-direction: column;
     transition: box-shadow 0.3s ease;
+    background: transparent;
   }
 
   .good {
