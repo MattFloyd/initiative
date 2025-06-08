@@ -2,217 +2,537 @@
   import { characters, addCharacter as addChar, updateCharacter as updateChar, removeCharacter as removeChar } from './characterStore';
   import type { Character } from './characterStore';
   import AttackEditor from './AttackEditor.svelte';
-
+  import { onMount } from 'svelte';
 
   let newChar: Omit<Character, 'id'> = {
     name: '',
-    team: 'good',
-    isPlayer: false,
+    team: 'evil', // Default to 'evil' team for enemies/NPCs
+    isPlayer: false, // Always false for enemies/NPCs
     ac: 0,
     hp: 0,
     initiativeModifier: 0,
     attacks: []
   };
 
-  let editing: Record<string, boolean> = {};
+  let selectedCharacterId: string | null = null;
+  let isNewCharacter = false;
 
-  $: isAddDisabled = !newChar.name.trim();
-
-  function addCharacter() {
-    addChar(newChar);
-    newChar = { ...newChar, name: '' };
+  function selectCharacter(id: string) {
+    selectedCharacterId = id;
+    isNewCharacter = false;
   }
 
-  function toggleEdit(id: string) {
-    editing[id] = !editing[id];
+  function createNewCharacter() {
+    selectedCharacterId = null;
+    isNewCharacter = true;
+    newChar = {
+      name: '',
+      team: 'evil',
+      isPlayer: false, // Always false for enemies/NPCs
+      ac: 0,
+      hp: 0,
+      initiativeModifier: 0,
+      attacks: []
+    };
   }
 
-  function updateCharacter(id: string, field: keyof Character, value: any) {
-    updateChar(id, field, value);
+  function cancelEdit() {
+    selectedCharacterId = null;
+    isNewCharacter = false;
   }
 
-  function removeCharacter(id: string) {
-    removeChar(id);
+  $: isFormValid = newChar.name.trim().length > 0;
+
+  function saveCharacter() {
+    if (isNewCharacter) {
+      addChar(newChar);
+      isNewCharacter = false;
+    } else if (selectedCharacterId) {
+      // Update existing character
+      Object.entries(newChar).forEach(([key, value]) => {
+        updateChar(selectedCharacterId, key as keyof Character, value);
+      });
+    }
+  }
+
+  function deleteCharacter() {
+    if (selectedCharacterId && !isNewCharacter) {
+      removeChar(selectedCharacterId);
+      selectedCharacterId = null;
+      isNewCharacter = false;
+    }
+  }
+
+  function loadCharacter(character: Character) {
+    newChar = {
+      name: character.name,
+      team: character.team,
+      isPlayer: character.isPlayer,
+      ac: character.ac,
+      hp: character.hp,
+      initiativeModifier: character.initiativeModifier,
+      attacks: [...character.attacks]
+    };
   }
 </script>
 
-<h2>Add Character / NPC</h2>
-<div class="char-form">
-  <div class="form-group">
-    <label for="name">Name</label>
-    <input type="text" id="name" bind:value={newChar.name} on:input={() => isAddDisabled = !newChar.name.trim()} />
-  </div>
-  <div class="form-group">
-    <label for="team">Team</label>
-    <select id="team" bind:value={newChar.team}>
-      <option value="good">Good</option>
-      <option value="bad">Bad</option>
-    </select>
-  </div>
-  <div class="form-group">
-    <div class="form-group">
-      <label for="isPlayer">Type</label>
-      <select id="isPlayer" bind:value={newChar.isPlayer}>
-        <option value={false}>NPC</option>
-        <option value={true}>Player</option>
-      </select>
+<div class="character-editor">
+  <!-- Left Panel: Character List -->
+  <div class="character-list">
+    <h2>Enemies & NPCs</h2>
+    <button 
+      class="new-character-btn" 
+      on:click={createNewCharacter}
+      on:keypress={(e) => e.key === 'Enter' && createNewCharacter()}
+    >
+      + Add New Enemy/NPC
+    </button>
+    <div class="character-items">
+      {#each $characters.filter(c => !c.isPlayer) as char (char.id)}
+        <div 
+          class="character-item {char.team} {selectedCharacterId === char.id ? 'selected' : ''}"
+          on:click={() => {
+            selectCharacter(char.id);
+            loadCharacter(char);
+          }}
+          on:keypress={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              selectCharacter(char.id);
+              loadCharacter(char);
+            }
+          }}
+          role="button"
+          tabindex="0"
+        >
+          <div class="char-icon">
+            {#if char.team === 'good'}
+              <i class="fas fa-user-shield"></i>
+            {:else if char.team === 'evil'}
+              <i class="fas fa-skull"></i>
+            {:else}
+              <i class="fas fa-user"></i>
+            {/if}
+          </div>
+          <div class="char-info">
+            <div class="char-name">{char.name}</div>
+            <div class="char-details">
+              AC: {char.ac} | HP: {char.hp} | Init: {char.initiativeModifier >= 0 ? '+' : ''}{char.initiativeModifier}
+            </div>
+          </div>
+        </div>
+      {:else}
+        <div class="empty-state">
+          <i class="fas fa-users-slash"></i>
+          <p>No enemies or NPCs found</p>
+        </div>
+      {/each}
     </div>
   </div>
-  <div class="form-group">
-    <label for="ac">AC</label>
-    <input id="ac" type="number" bind:value={newChar.ac} placeholder="AC" />
-  </div>
-  <div class="form-group">
-    <label for="maxHp">Max HP</label>
-    <input id="maxHp" type="number" bind:value={newChar.hp} placeholder="HP" />
-  </div>
-  <div class="form-group">
-    <label for="init-mod">Initiative Modifier</label>
-    <input 
-      type="number" 
-      id="init-mod" 
-      bind:value={newChar.initiativeModifier} 
-      disabled={newChar.isPlayer}
-    />
-  </div>
-  {#if !newChar.isPlayer}
-    <div class="form-group">
-      <div class="attacks-section">
-        <AttackEditor 
-          attacks={newChar.attacks}
-          onAttackChange={(newAttacks) => newChar = { ...newChar, attacks: newAttacks }}
-        />
+
+  <!-- Right Panel: Character Form -->
+  <div class="character-form-container">
+    {#if selectedCharacterId || isNewCharacter}
+      <div class="character-form">
+        <h2>{isNewCharacter ? 'Create New Enemy/NPC' : 'Edit Enemy/NPC'}</h2>
+        
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input 
+            type="text" 
+            id="name" 
+            bind:value={newChar.name} 
+            placeholder="Enemy/NPC name"
+          />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="team">Team</label>
+            <select id="team" bind:value={newChar.team}>
+              <option value="evil">Enemy</option>
+              <option value="good">Friendly NPC</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="ac">Armor Class</label>
+            <input 
+              id="ac" 
+              type="number" 
+              bind:value={newChar.ac} 
+              placeholder="AC" 
+              min="0"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="maxHp">Max HP</label>
+            <input 
+              id="maxHp" 
+              type="number" 
+              bind:value={newChar.hp} 
+              placeholder="HP" 
+              min="1"
+            />
+          </div>
+        </div>
+
+        <div class="form-group" class:hidden={newChar.isPlayer}>
+          <label for="init-mod">Initiative Modifier</label>
+          <input 
+            type="number" 
+            id="init-mod" 
+            bind:value={newChar.initiativeModifier}
+            placeholder="0"
+          />
+        </div>
+
+        {#if !newChar.isPlayer}
+          <div class="attacks-section">
+            <h3>Attacks</h3>
+            <AttackEditor 
+              attacks={newChar.attacks}
+              onAttackChange={(newAttacks) => newChar = { ...newChar, attacks: newAttacks }}
+            />
+          </div>
+        {/if}
+
+        <div class="form-actions">
+          <button 
+            class="save-btn" 
+            on:click={saveCharacter} 
+            disabled={!isFormValid}
+          >
+            {isNewCharacter ? 'Create Enemy/NPC' : 'Save Changes'}
+          </button>
+          <button class="cancel-btn" on:click={cancelEdit}>
+            Cancel
+          </button>
+          {#if !isNewCharacter}
+            <button class="delete-btn" on:click={deleteCharacter}>
+              Delete Enemy/NPC
+            </button>
+          {/if}
+        </div>
       </div>
-    </div>
-  {/if}
-  <button on:click={addCharacter} disabled={isAddDisabled}>Add Character</button>
+    {:else}
+      <div class="no-selection">
+        <div class="no-selection-content">
+          <i class="fas fa-users"></i>
+          <h3>No Enemy/NPC Selected</h3>
+          <p>Select an enemy/NPC from the list or create a new one to get started.</p>
+          <button 
+            on:click={createNewCharacter} 
+            on:keypress={(e) => e.key === 'Enter' && createNewCharacter()}
+            class="new-character-btn"
+          >
+            + Create New Enemy/NPC
+          </button>
+        </div>
+      </div>
+    {/if}
+  </div>
 </div>
 
-<h2>Existing Characters</h2>
-{#each $characters as char (char.id)}
-  <div class="char-card {char.team}">
-    {#if editing[char.id]}
-      <input bind:value={char.name} on:change={(e) => updateCharacter(char.id, 'name', (e.target as HTMLInputElement).value)} />
-      <select bind:value={char.team} on:change={(e) => updateCharacter(char.id, 'team', (e.target as HTMLInputElement).value)}>
-        <option value="good">Good</option>
-        <option value="bad">Bad</option>
-      </select>
-      <label>
-        <select on:change={(e) => updateCharacter(char.id, 'isPlayer', (e.target as HTMLSelectElement).value === 'true')}>
-          <option value="false" selected={!char.isPlayer}>NPC</option>
-          <option value="true" selected={char.isPlayer}>Player</option>
-        </select>
-      </label>
-      <label>
-        <input type="number" bind:value={char.ac} on:change={(e) => updateCharacter(char.id, 'ac', +(e.target as HTMLInputElement).value)} />
-        AC
-      </label>
-      <label>
-        <input type="number" bind:value={char.hp} on:change={(e) => updateCharacter(char.id, 'hp', +(e.target as HTMLInputElement).value)} />
-        Max HP
-      </label>
-      {#if !char.isPlayer}
-        <label>
-          <input type="number" bind:value={char.initiativeModifier} on:change={(e) => updateCharacter(char.id, 'initiativeModifier', +(e.target as HTMLInputElement).value)} />
-          Initiative Modifier
-        </label>
-        <AttackEditor 
-          attacks={char.attacks}
-          onAttackChange={(newAttacks) => updateCharacter(char.id, 'attacks', newAttacks)}
-        />
-      {/if}
-    {:else}
-      <div class="char-name">
-        <strong>{char.name}{char.isPlayer ? ' (Player)' : ''}</strong>
-        {#if char.team === 'good'}
-          <i class="fas fa-shield-alt"></i>
-        {:else}
-          <i class="fas fa-skull"></i>
-        {/if}
-      </div><br />
-      AC: {char.ac}<br />
-      Max HP: {char.hp}<br />
-      {#if !char.isPlayer}
-        Initiative Modifier: {char.initiativeModifier}
-      {/if}
-    {/if}
-
-    <div class="char-actions">
-      <button on:click={() => toggleEdit(char.id)}>{editing[char.id] ? 'Done' : 'Edit'}</button>
-      <button on:click={() => removeCharacter(char.id)}>Delete</button>
-    </div>
-  </div>
-{/each}
-
 <style>
-  .char-form, .char-card {
-    border: 1px solid #ccc;
-    margin-bottom: 1rem;
-    border-radius: 6px;
-    background: transparent;
+  .character-editor {
+    display: flex;
+    height: calc(100vh - 150px);
+    gap: 1.5rem;
+    margin-top: 1rem;
   }
 
-  .char-form {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.5rem;
-    align-items: center;
+  /* Left Panel: Character List */
+  .character-list {
+    width: 300px;
+    background: #1e1e1e;
+    border-radius: 6px;
     padding: 1rem;
-    box-sizing: border-box;
-    width: 100%;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #333;
+    overflow: hidden;
+  }
+
+  .character-list h2 {
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #333;
+    color: #e0e0e0;
+  }
+
+  .new-character-btn {
+    background: #007acc;
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s ease;
+  }
+
+  .new-character-btn:hover {
+    background: #0090ff;
+  }
+
+  .character-items {
+    flex: 1;
+    overflow-y: auto;
+    margin: 0 -0.5rem;
+    padding: 0 0.5rem;
+  }
+
+  .character-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    border: 1px solid #333;
+  }
+
+  .character-item:hover {
+    background: #2a2a2a;
+  }
+
+  .character-item.selected {
+    background: #333;
+    border-color: #007acc;
+  }
+
+  .char-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    color: #e0e0e0;
+  }
+
+  .char-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .char-name {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #e0e0e0;
+  }
+
+  .char-details {
+    font-size: 0.8rem;
+    color: #999;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Right Panel: Character Form */
+  .character-form-container {
+    flex: 1;
+    background: #1e1e1e;
+    border-radius: 6px;
+    border: 1px solid #333;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .character-form {
+    padding: 1.5rem;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .character-form h2 {
+    margin-top: 0;
+    color: #e0e0e0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #333;
   }
 
   .form-group {
-    display: contents;
+    margin-bottom: 1rem;
   }
 
-  .form-group label {
-    text-align: right;
-    padding-right: 0.5rem;
-  }
-
-  .char-form button {
-    grid-column: span 2;
-    justify-self: center;
-    margin-top: 0.5rem;
-  }
-
-  .attacks-section {
-    grid-column: 1 / -1;
-    margin: 1rem 0 0 0;
-    padding: 1rem 0 0 0;
-    border-top: 1px solid #eee;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-  
-
-
-  .char-card {
+  .form-row {
     display: flex;
-    flex-direction: column;
-    transition: box-shadow 0.3s ease;
-    background: transparent;
+    gap: 1rem;
+    margin-bottom: 1rem;
   }
 
+  .form-row .form-group {
+    flex: 1;
+    margin-bottom: 0;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #e0e0e0;
+    font-size: 0.9rem;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select {
+    width: 100%;
+    padding: 0.5rem;
+    background: #2d2d2d;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 1rem;
+  }
+
+  input:focus,
+  select:focus {
+    outline: none;
+    border-color: #007acc;
+    box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.3);
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #333;
+  }
+
+  .save-btn,
+  .cancel-btn,
+  .delete-btn {
+    padding: 0.75rem 1.25rem;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+  }
+
+  .save-btn {
+    background: #007acc;
+    color: white;
+  }
+
+  .save-btn:hover {
+    background: #0090ff;
+  }
+
+  .save-btn:disabled {
+    background: #1a3e5c;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  .cancel-btn {
+    background: #2d2d2d;
+    color: #e0e0e0;
+    border: 1px solid #444;
+  }
+
+  .cancel-btn:hover {
+    background: #3d3d3d;
+  }
+
+  .delete-btn {
+    margin-left: auto;
+    background: #5c1a1a;
+    color: #ff9e9e;
+  }
+
+  .delete-btn:hover {
+    background: #7d1f1f;
+  }
+
+  /* No Selection State */
+  .no-selection {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .no-selection-content {
+    max-width: 300px;
+  }
+
+  .no-selection i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+
+  .no-selection h3 {
+    margin: 0 0 0.5rem 0;
+    color: #e0e0e0;
+  }
+
+  .no-selection p {
+    margin: 0 0 1.5rem 0;
+    color: #999;
+  }
+
+  /* Attacks Section */
+  .attacks-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #333;
+  }
+
+  .attacks-section h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #e0e0e0;
+  }
+
+  /* Team Colors */
   .good {
-    box-shadow: 0 0 15px blue;
+    border-left: 3px solid #2e7d32; /* Green border for good team */
   }
 
-  .bad {
-    box-shadow: 0 0 15px red;
+  .evil {
+    border-left: 3px solid #c62828; /* Red border for evil team */
+    box-shadow: 0 0 15px rgba(198, 40, 40, 0.3); /* Subtle red glow */
   }
 
-  .char-actions {
-    margin-top: 0.5rem;
+  .neutral {
+    border-left: 3px solid #ff9800; /* Orange border for neutral team */
   }
 
-  .char-actions button {
-    margin-right: 0.5rem;
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
   }
 
-  .char-actions button {
-    margin-right: 0.5rem;
+  ::-webkit-scrollbar-track {
+    background: #1e1e1e;
   }
+
+  ::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+
+  /* Removed unused .char-actions styles */
 </style>

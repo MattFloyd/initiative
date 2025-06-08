@@ -103,10 +103,11 @@
 <style>
   .encounter-container {
     padding: 1rem;
-    border: 1px solid #ccc;
+    border: 1px solid #444;
     border-radius: 6px;
     margin: 1rem;
     width: 70vw;
+    background: #1e1e1e;
   }
 
   .initiative-list {
@@ -114,15 +115,18 @@
   }
 
   .initiative-item {
-    padding: 0.5rem;
-    border-bottom: 1px solid #eee;
+    padding: 0.8rem;
+    border-bottom: 1px solid #333;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: #2d2d2d;
+    margin-bottom: 0.25rem;
+    border-radius: 4px;
   }
 
   .initiative-rolls {
-    color: #666;
+    color: #999;
   }
 
   .player-initiatives {
@@ -131,13 +135,39 @@
 
   .player-initiative {
     margin: 0.5rem 0;
-    padding: 0.5rem;
-    border: 1px solid #eee;
+    padding: 1rem;
+    border: 1px solid #333;
     border-radius: 4px;
+    background: #2d2d2d;
   }
 
   input[type="number"] {
-    width: 50px;
+    width: 60px;
     margin: 0 0.5rem;
+    background: #1e1e1e;
+    border: 1px solid #444;
+    color: #e0e0e0;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+  }
+  
+  button {
+    background: #333;
+    border: 1px solid #444;
+    color: #e0e0e0;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: all 0.2s ease;
+  }
+  
+  button:hover {
+    background: #444;
+  }
+  
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 </style>

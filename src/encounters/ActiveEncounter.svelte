@@ -102,33 +102,39 @@
     display: flex;
     height: 100%;
     margin-top: 1rem;
+    color: #e0e0e0;
   }
 
   .initiative-sidebar {
     width: 250px;
-    border-right: 1px solid #ddd;
+    border-right: 1px solid #333;
     padding: 1rem;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
     overflow-y: auto;
+    background: #1e1e1e;
   }
 
   .initiative-sidebar .initiative-item {
     cursor: pointer;
     padding: 1rem;
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    background: #2d2d2d;
+    border: 1px solid #333;
+    color: #e0e0e0;
     transition: all 0.2s ease;
+    text-align: left;
   }
 
   .initiative-sidebar .initiative-item:hover {
-    background: #f5f5f5;
+    background: #3d3d3d;
     transform: translateY(-1px);
   }
 
   .initiative-sidebar .initiative-item.selected {
     background: #007acc;
+    border-color: #0090ff;
     color: white;
     transform: translateY(-1px);
   }
@@ -136,6 +142,9 @@
   .character-stats {
     flex: 1;
     padding: 1rem;
+    background: #1e1e1e;
+    border-radius: 6px;
+    margin: 0.5rem;
   }
 
   .stat-block {
@@ -145,10 +154,39 @@
   .stat {
     margin: 0.5rem 0;
     font-size: 1.1rem;
+    padding: 0.5rem;
+    background: #2d2d2d;
+    border-radius: 4px;
+    border: 1px solid #333;
+  }
+  
+  .stat button {
+    margin-left: 1rem;
+    background: #333;
+    border: 1px solid #444;
+    color: #e0e0e0;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+  }
+  
+  .stat button:hover {
+    background: #444;
   }
 
   h4 {
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: #e0e0e0;
+    font-size: 1.2rem;
+  }
+  
+  h3 {
+    color: #e0e0e0;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #333;
   }
 </style>
